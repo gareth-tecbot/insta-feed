@@ -1,0 +1,215 @@
+/* InstagramFeed.css - Styles for the Instagram feed grid */
+.instagram-feed {
+  width: 100%;
+}
+
+.feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.feed-item {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid #e1e1e1;
+}
+
+.feed-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.post-image-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+}
+
+.post-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.feed-item:hover .post-image {
+  transform: scale(1.05);
+}
+
+.post-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feed-item:hover .post-overlay {
+  opacity: 1;
+}
+
+.post-info {
+  text-align: center;
+  color: white;
+}
+
+.view-post {
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 25px;
+  backdrop-filter: blur(10px);
+}
+
+.post-caption {
+  padding: 15px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.post-caption p {
+  color: #262626;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.post-meta {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.post-timestamp {
+  color: #8e8e8e;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Loading states */
+.feed-loading,
+.feed-refresh-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f0f0f0;
+  border-top: 3px solid #405de6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-spinner p {
+  color: #8e8e8e;
+  font-size: 1rem;
+  margin: 0;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Empty state */
+.feed-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 20px;
+}
+
+.empty-state {
+  text-align: center;
+  max-width: 400px;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.7;
+}
+
+.empty-state h3 {
+  color: #262626;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.empty-state p {
+  color: #8e8e8e;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .feed-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    padding: 15px 0;
+  }
+  
+  .post-image-container {
+    height: 250px;
+  }
+  
+  .feed-item {
+    border-radius: 12px;
+  }
+  
+  .post-caption,
+  .post-meta {
+    padding: 12px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .feed-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 10px 0;
+  }
+  
+  .post-image-container {
+    height: 200px;
+  }
+  
+  .feed-loading,
+  .feed-refresh-loading {
+    padding: 40px 20px;
+  }
+  
+  .empty-state {
+    padding: 0 20px;
+  }
+}
