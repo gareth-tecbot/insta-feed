@@ -213,3 +213,14 @@
     padding: 0 20px;
   }
 }
+
+.embed-feed {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.embed-post iframe {
+  border-radius: 10px;
+}

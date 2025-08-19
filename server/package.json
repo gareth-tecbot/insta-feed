@@ -4,26 +4,33 @@
   "description": "Backend server for Instagram feed widget using Puppeteer",
   "main": "server.js",
   "scripts": {
-    "start": "node server_fixed.js",
+    "start": "node server_em.js",
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["instagram", "puppeteer", "scraping", "express"],
+  "keywords": [
+    "instagram",
+    "puppeteer",
+    "scraping",
+    "express"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "puppeteer": "^21.5.2",
-    "cors": "^2.8.5",
-    "helmet": "^7.1.0",
-    "express-rate-limit": "^7.1.5",
-    "dotenv": "^16.3.1",
-    "express-validator": "^7.0.1",
-    "sanitize-html": "^2.11.0",
-    "cookie-parser": "^1.4.6",
-    "express-session": "^1.17.3",
+    "axios": "^1.11.0",
     "connect-mongo": "^5.1.0",
-    "mongoose": "^8.0.3"
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-session": "^1.17.3",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "mongoose": "^8.0.3",
+    "puppeteer": "^21.5.2",
+    "sanitize-html": "^2.11.0",
+    "scrapfly-sdk": "^0.6.9"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
