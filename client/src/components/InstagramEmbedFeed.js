@@ -1,57 +1,51 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './EmbedFeed.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
-const EmbedFeed = ({ username }) => {
+const EmbedFeed = ({ accountKey }) => {
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!username) return;
+    if (!accountKey) return;
 
-    const fetchPosts = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/embed-feed`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username }),
-        });
-        const data = await response.json();
-        if (data.success) {
-          setPosts(data.posts);
-        } else {
-          setError(data.error || 'Failed to load posts');
-        }
-      } catch (err) {
-        setError('Network error. Please try again.');
-        console.error(err);
-      } finally {
+    setLoading(true);
+    setError(null);
+
+    fetch(`${API_BASE_URL}/api/instagram-posts/${accountKey}`)
+      .then(async res => {
+        const json = await res.json();
+        if (!res.ok || json.error) throw new Error(json.error || 'Failed to fetch posts');
+        return json;
+      })
+      .then(data => {
+        setPosts(data.data || []);
         setLoading(false);
-      }
-    };
+      })
+      .catch(err => {
+        setError(err.message || 'Failed to fetch posts');
+        setLoading(false);
+      });
+  }, [accountKey]);
 
-    fetchPosts();
-  }, [username]);
-
-  if (!username) return null;
+  if (loading) return <p>Loading posts...</p>;
+  if (error) return <p style={{color:'crimson'}}>Error: {error}</p>;
+  if (!posts.length) return <p>No posts found for this account.</p>;
 
   return (
-    <div className="embed-feed">
-      <h3>Instagram Feed: @{username}</h3>
-      {loading && <p>Loading posts...</p>}
-      {error && <p className="error">{error}</p>}
-      <div className="grid">
-        {posts.map(post => (
-          <div key={post.id} className="post">
-            <img src={post.image} alt={post.caption} />
-            <p>{post.caption}</p>
-          </div>
-        ))}
-      </div>
+    <div className="instagram-feed-grid">
+      {posts.map(post => (
+        <a key={post.id} href={post.permalink} target="_blank" rel="noopener noreferrer" className="instagram-post">
+          {post.media_type === 'VIDEO' ? (
+            <video src={post.media_url} controls />
+          ) : (
+            <img src={post.media_url} alt={post.caption || 'Instagram post'} />
+          )}
+          {post.caption && <p className="caption">{post.caption}</p>}
+        </a>
+      ))}
     </div>
   );
 };

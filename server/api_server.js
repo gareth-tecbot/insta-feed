@@ -1,74 +1,133 @@
-import express from 'express';
-import cors from 'cors';
-import axios from 'axios';
-import dotenv from 'dotenv';
-
-dotenv.config();
+require('dotenv').config();
+const express = require('express');
+const fetch = require('node-fetch');
+const bodyParser = require('body-parser');
+const cors = require('cors');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 8000;
-const IG_USER_ID = process.env.IG_USER_ID;
-const PAGE_TOKEN = process.env.IG_PAGE_ACCESS_TOKEN;
 
-// GET 12 latest media with image + caption (handles albums/reels thumbnails too)
-app.post('/api/embed-feed', async (req, res) => {
+/**
+ * In-memory store. In prod, replace with DB.
+ * [{ pageId, pageToken, instagramId, name }]
+ */
+let instagramAccounts = [];
+
+const MAIN_USER_TOKEN = process.env.MAIN_USER_TOKEN; // long-lived USER token (60-day), NOT a page token
+
+if (!MAIN_USER_TOKEN) {
+  console.warn('⚠️  MAIN_USER_TOKEN not set. Set it in .env');
+}
+
+/**
+ * Helpers
+ */
+async function fbGet(url) {
+  const res = await fetch(url);
+  const json = await res.json();
+  if (!res.ok || json.error) {
+    const msg = json?.error?.message || `Facebook API error for ${url}`;
+    const code = json?.error?.code;
+    const type = json?.error?.type;
+    throw new Error(`${msg}${code ? ` (code ${code})` : ''}${type ? ` [${type}]` : ''}`);
+  }
+  return json;
+}
+
+/**
+ * Add a new Instagram account by Page ID.
+ * - Validates we can see the linked IG account
+ * - Fetches THAT PAGE's access_token
+ * - Stores per-account token + ig id
+ */
+app.post('/api/add-instagram-account', async (req, res) => {
+  const { pageId } = req.body;
+  if (!pageId) return res.status(400).json({ error: 'Page ID is required' });
+
   try {
-    if (!IG_USER_ID || !PAGE_TOKEN) {
-      return res.status(500).json({ error: 'Server missing IG credentials' });
-    }
+    // 1) Get IG biz account + page name via USER token
+    const pageFields = 'instagram_business_account,name';
+    const pageInfo = await fbGet(
+      `https://graph.facebook.com/v18.0/${pageId}?fields=${pageFields}&access_token=${encodeURIComponent(MAIN_USER_TOKEN)}`
+    );
 
-    // Ask IG for 12 media items
-    const fields = [
-      'id',
-      'caption',
-      'media_type',
-      'media_url',
-      'thumbnail_url',
-      'permalink',
-      'children{media_type,media_url,thumbnail_url}'
-    ].join(',');
-
-    const url = `https://graph.facebook.com/v21.0/${IG_USER_ID}/media`;
-    const { data } = await axios.get(url, {
-      params: { fields, limit: 12, access_token: PAGE_TOKEN },
-      timeout: 15000,
-    });
-
-    // Normalize to { id, image, caption, permalink }
-    const posts = (data?.data || []).map(item => {
-      // pick best displayable image:
-      // - IMAGE/VIDEO: media_url or thumbnail_url
-      // - CAROUSEL_ALBUM: first child image/thumbnail
-      let image = item.media_url || item.thumbnail_url || null;
-      if (!image && item.media_type === 'CAROUSEL_ALBUM' && item.children?.data?.length) {
-        const first = item.children.data[0];
-        image = first.media_url || first.thumbnail_url || null;
-      }
-      return {
-        id: item.id,
-        image,
-        caption: item.caption || '',
-        permalink: item.permalink,
-      };
-    }).filter(p => p.image); // only keep posts we can show
-
-    return res.json({ success: true, posts });
-  } catch (err) {
-    console.error('IG fetch error:', err?.response?.data || err.message);
-    // Bubble up some helpful messages
-    const status = err?.response?.status || 500;
-    if (status === 400 || status === 401 || status === 403) {
-      return res.status(status).json({
-        error: 'Instagram API auth/permission issue. Check token, scopes, and IG/Page connection.'
+    const instagramBiz = pageInfo.instagram_business_account?.id;
+    if (!instagramBiz) {
+      return res.status(400).json({
+        error:
+          'No Instagram Business/Creator account linked to this Page (or your user/app lacks permissions).'
       });
     }
-    return res.status(500).json({ error: 'Failed to fetch Instagram posts' });
+
+    // 2) Get THIS PAGE’s page access token (this is the token you must use for that IG account)
+    const tokenInfo = await fbGet(
+      `https://graph.facebook.com/v18.0/${pageId}?fields=access_token&access_token=${encodeURIComponent(MAIN_USER_TOKEN)}`
+    );
+
+    const pageToken = tokenInfo.access_token;
+    if (!pageToken) {
+      return res.status(400).json({
+        error:
+          'Could not fetch this Page’s access token. Ensure your user token has pages_show_list and you are a Page admin.'
+      });
+    }
+
+    // 3) Store/update account
+    const existingIdx = instagramAccounts.findIndex(a => a.pageId === pageId);
+    const account = {
+      pageId,
+      pageToken, // <- IMPORTANT: per-page token
+      instagramId: instagramBiz,
+      name: pageInfo.name || pageId
+    };
+
+    if (existingIdx >= 0) {
+      instagramAccounts[existingIdx] = account;
+    } else {
+      instagramAccounts.push(account);
+    }
+
+    res.json({ message: 'Instagram account added', account });
+  } catch (err) {
+    console.error('Add account error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+/**
+ * List added accounts
+ */
+app.get('/api/instagram-accounts', (req, res) => {
+  res.json({ accounts: instagramAccounts });
 });
+
+/**
+ * Fetch posts for a specific Instagram Business ID
+ */
+app.get('/api/instagram-posts/:instagramId', async (req, res) => {
+  const { instagramId } = req.params;
+  const account = instagramAccounts.find(acc => acc.instagramId === instagramId);
+
+  if (!account) return res.status(404).json({ error: 'Account not found. Add it first.' });
+
+  try {
+    const url = `https://graph.facebook.com/v18.0/${instagramId}/media?fields=id,caption,media_url,thumbnail_url,permalink,media_type,timestamp&access_token=${encodeURIComponent(
+      account.pageToken
+    )}`;
+    const data = await fbGet(url);
+    res.json({ data: data.data || [] });
+  } catch (err) {
+    console.error('Fetch posts error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Basic health
+ */
+app.get('/api/health', (_req, res) => res.json({ ok: true, count: instagramAccounts.length }));
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
