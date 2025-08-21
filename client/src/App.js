@@ -1,7 +1,17 @@
 // src/App.js
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import './components/EmbedFeed.css';
 import EmbedFeed from './components/InstagramEmbedFeed';
+
+const DISPLAY_OPTIONS = [
+  { key: 'grid-2', label: 'Grid — 2 columns' },
+  { key: 'grid-3', label: 'Grid — 3 columns' },
+  { key: 'grid-4', label: 'Grid — 4 columns' },
+  { key: 'text-below', label: 'Text Below (3 col)' },
+  { key: 'text-left', label: 'Text Left (2 col)' },
+  { key: 'masonry', label: 'Masonry (responsive)' },
+];
 
 function App() {
   const [accounts, setAccounts] = useState([]);
@@ -9,6 +19,7 @@ function App() {
   const [newPageId, setNewPageId] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [displayStyle, setDisplayStyle] = useState('grid-4'); // default
 
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
@@ -50,81 +61,114 @@ function App() {
   };
 
   return (
-    <div className="app-root">
-      <header className="app-header">
-        <h1 className="brand">Instagram Feed Widget</h1>
-        <p className="subtitle">Add pages, pick an account and display feeds in a beautiful grid.</p>
-      </header>
+    <div className="app-root with-panel">
+      <aside className="config-panel">
+        <div className="config-inner">
+          <h3>Display Settings</h3>
+          <p className="muted">Choose a layout style for the feed.</p>
 
-      <main className="app-main">
-        <section className="card add-card">
-          <h2 className="card-title">Add Instagram Account</h2>
-          <p className="muted">Enter the Facebook Page ID that is linked to the Instagram Business account.</p>
-
-          <div className="form-row">
-            <input
-              className="input"
-              type="text"
-              placeholder="Facebook Page ID (e.g. 756469077550854)"
-              value={newPageId}
-              onChange={e => setNewPageId(e.target.value)}
-              aria-label="Facebook Page ID"
-            />
-            <button className="btn primary" onClick={handleAddAccount}>Add Account</button>
+          <div className="display-options">
+            {DISPLAY_OPTIONS.map(opt => (
+              <label key={opt.key} className={`display-option ${displayStyle===opt.key ? 'active' : ''}`}>
+                <input
+                  type="radio"
+                  name="displayStyle"
+                  value={opt.key}
+                  checked={displayStyle === opt.key}
+                  onChange={() => setDisplayStyle(opt.key)}
+                />
+                <div className="option-label">
+                  <strong>{opt.label}</strong>
+                </div>
+              </label>
+            ))}
           </div>
 
-          <div className="messages">
-            {message && <div className="msg success">{message}</div>}
-            {error && <div className="msg error">{error}</div>}
+          <hr />
+
+          <h4 className="small muted">Preview Controls</h4>
+          <div style={{marginTop:8}}>
+            <button className="btn small secondary" onClick={() => setDisplayStyle('grid-4')}>Reset</button>
           </div>
-        </section>
+        </div>
+      </aside>
 
-        <section className="card select-card">
-          <h2 className="card-title">Select Account to View</h2>
+      <div className="main-content">
+        <header className="app-header">
+          <h1 className="brand">Instagram Feed Widget</h1>
+          <p className="subtitle">Add pages, pick an account and display feeds in a beautiful grid.</p>
+        </header>
 
-          <div className="form-row">
-            <select
-              className="account-select"
-              value={selectedAccount}
-              onChange={e => setSelectedAccount(e.target.value)}
-              aria-label="Select Instagram account"
-            >
-              <option value="">— Select an account —</option>
-              {accounts.map(acc => (
-                <option key={acc.instagramId} value={acc.instagramId}>
-                  {acc.name}
-                </option>
-              ))}
-            </select>
-            <button
-              className="btn secondary"
-              onClick={() => {
-                setSelectedAccount('');
-                setMessage('');
-                setError('');
-              }}
-              title="Clear selection"
-            >
-              Clear
-            </button>
-          </div>
+        <main className="app-main">
+          <section className="card add-card">
+            <h2 className="card-title">Add Instagram Account</h2>
+            <p className="muted">Enter the Facebook Page ID that is linked to the Instagram Business account.</p>
 
-          <p className="muted small">Tip: Add a Page ID above to connect a new Instagram Business account.</p>
-        </section>
+            <div className="form-row">
+              <input
+                className="input"
+                type="text"
+                placeholder="Facebook Page ID (e.g. 756469077550854)"
+                value={newPageId}
+                onChange={e => setNewPageId(e.target.value)}
+                aria-label="Facebook Page ID"
+              />
+              <button className="btn primary" onClick={handleAddAccount}>Add Account</button>
+            </div>
 
-        <section className="card feed-card">
-          <h2 className="card-title">Preview</h2>
-          {!selectedAccount ? (
-            <div className="placeholder">No account selected. Choose an account to view the feed.</div>
-          ) : (
-            <EmbedFeed accountKey={selectedAccount} />
-          )}
-        </section>
-      </main>
+            <div className="messages">
+              {message && <div className="msg success">{message}</div>}
+              {error && <div className="msg error">{error}</div>}
+            </div>
+          </section>
 
-      <footer className="app-footer">
-        <small>Built with the Instagram Graph API • Keep tokens secure on the server</small>
-      </footer>
+          <section className="card select-card">
+            <h2 className="card-title">Select Account to View</h2>
+
+            <div className="form-row">
+              <select
+                className="select account-select"
+                value={selectedAccount}
+                onChange={e => setSelectedAccount(e.target.value)}
+                aria-label="Select Instagram account"
+              >
+                <option value="">— Select an account —</option>
+                {accounts.map(acc => (
+                  <option key={acc.instagramId} value={acc.instagramId}>
+                    {acc.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="btn secondary"
+                onClick={() => {
+                  setSelectedAccount('');
+                  setMessage('');
+                  setError('');
+                }}
+                title="Clear selection"
+              >
+                Clear
+              </button>
+            </div>
+
+            <p className="muted small">Tip: Add a Page ID above to connect a new Instagram Business account.</p>
+          </section>
+
+          <section className="card feed-card">
+            <h2 className="card-title">Preview — {DISPLAY_OPTIONS.find(o=>o.key===displayStyle)?.label}</h2>
+            {!selectedAccount ? (
+              <div className="placeholder">No account selected. Choose an account to view the feed.</div>
+            ) : (
+              <EmbedFeed accountKey={selectedAccount} displayStyle={displayStyle} />
+            )}
+          </section>
+        </main>
+
+        <footer className="app-footer">
+          <small>Built with the Instagram Graph API • Keep tokens secure on the server</small>
+        </footer>
+      </div>
     </div>
   );
 }
