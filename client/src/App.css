@@ -1,103 +1,158 @@
-/* src/App.css - clean, neutral UI for the feed manager */
+/* src/App.css - layout + panel + controls */
 :root{
-  --bg: #0f1720;
-  --card: #0f1726;
+  --bg: #071426;
+  --card: rgba(255,255,255,0.02);
   --muted: #9aa4b2;
   --accent: #0ea5a3;
-  --accent-2: #06b6d4;
   --text: #e6eef6;
   --danger: #ff6b6b;
   --success: #4ade80;
   --glass: rgba(255,255,255,0.03);
 }
 
-* { box-sizing: border-box; }
-body, html, #root { height: 100%; margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: linear-gradient(180deg,#071023 0%, #071426 100%); color:var(--text); }
+*{ box-sizing:border-box; }
+body,html,#root{ height:100%; margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; background: linear-gradient(180deg,#071023 0%, #071426 100%); color:var(--text); }
 
-/* Layout */
-.app-root{ max-width:1200px; margin:28px auto; padding:20px; }
-.app-header{ text-align:center; margin-bottom:18px; }
-.brand{ margin:0; font-weight:700; letter-spacing:-0.5px; font-size:28px; }
-.subtitle{ margin:6px 0 0; color:var(--muted); font-size:14px; }
+/* app root */
+.app-root{ min-height:100vh; display:block; }
 
-/* Main grid */
+/* config panel - desktop */
+.config-panel{
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 280px;
+  background-color: #1a1a1a;
+  color: #fff;
+  padding: 20px;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+  overflow-y: auto;
+  z-index: 1100;
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+
+/* inner container to keep consistency */
+.config-inner{ max-width: 240px; margin: 0 auto; }
+
+/* main content - leaves space for panel on desktop */
+.main-content{
+  transition: margin-left 180ms ease, padding 180ms ease;
+  padding: 22px;
+  margin-left: 300px; /* space for config-panel on desktop */
+}
+
+/* when panel closed (used on small screens) */
+.main-content.panel-closed{
+  margin-left: 0;
+}
+
+/* mobile overlay for panel */
+.mobile-panel-overlay{
+  display:none;
+}
+.mobile-panel-overlay.show{
+  display:block;
+  position:fixed; inset:0; background: rgba(0,0,0,0.45);
+  z-index: 1050;
+}
+
+/* header */
+.app-header{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+.header-left{ display:flex; align-items:center; gap:12px; }
+.brand{ margin:0; font-weight:700; font-size:24px; }
+.subtitle{ margin:0; color:var(--muted); font-size:13px; }
+
+/* card layout for top row and feed row */
 .app-main{ display:grid; grid-template-columns: 1fr 360px; gap:18px; align-items:start; }
 @media (max-width:1000px){ .app-main{ grid-template-columns: 1fr; } }
 
-/* Card */
+/* Card styles */
 .card{ background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; padding:18px; box-shadow: 0 6px 22px rgba(2,6,23,0.55); border:1px solid rgba(255,255,255,0.03); }
 .card-title{ margin:0 0 8px 0; font-size:16px; color:var(--text); }
 .muted{ color:var(--muted); font-size:13px; margin:0 0 12px 0; }
 .small{ font-size:12px; color:var(--muted); margin-top:8px; }
 
-/* Add / Select form row */
-.form-row{ display:flex; gap:10px; align-items:center; width:100%; }
-@media (max-width:560px){ .form-row{ flex-direction:column; align-items:stretch; } }
+/* Top row layout: add-card and select-card side-by-side on wide screens */
+@media (min-width:1001px) {
+  .add-card{ grid-column: 1 / 2; }
+  .select-card{ grid-column: 2 / 3; }
+  /* we use the app-main grid defined above */
+}
 
-.input, .select {
+/* Make feed-preview-card span both columns (full width under top row) */
+.feed-preview-card { grid-column: 1 / -1; }
+
+/* Inputs & selects */
+.input, .select, .account-select {
   height:44px;
   padding:10px 12px;
   border-radius:10px;
-  border:1px solid rgba(255,255,255,0.06);
-  background: var(--glass);
   color:var(--text);
   font-size:14px;
-  outline: none;
-  transition: box-shadow .15s ease, transform .06s ease;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset;
+  outline:none;
 }
-.input:focus, .select:focus{
+.input:focus, .select:focus, .account-select:focus{
   box-shadow: 0 8px 30px rgba(3,10,18,0.45);
   transform: translateY(-1px);
   border-color: rgba(14,165,163,0.9);
 }
 
-.select{ appearance:none; -webkit-appearance:none; -moz-appearance:none; padding-right:36px; }
-
-/* Buttons */
+/* buttons */
 .btn{ height:44px; padding:0 14px; border-radius:10px; border:0; cursor:pointer; font-weight:600; }
-.btn.primary{ background: linear-gradient(90deg,var(--accent),var(--accent-2)); color:#042023; box-shadow: 0 8px 20px rgba(6,182,212,0.14); }
+.btn.primary{ background: linear-gradient(90deg,var(--accent), #06b6d4); color:#042023; box-shadow: 0 8px 20px rgba(6,182,212,0.14); }
 .btn.secondary{ background: transparent; color:var(--text); border:1px solid rgba(255,255,255,0.05); }
-.btn:active{ transform: translateY(1px); }
 
-/* Messages */
+/* messages */
 .messages{ margin-top:12px; }
 .msg{ padding:8px 10px; border-radius:8px; font-size:13px; margin-top:8px; }
 .msg.success{ background: rgba(74,222,128,0.12); color:var(--success); border:1px solid rgba(74,222,128,0.08); }
 .msg.error{ background: rgba(255,107,107,0.08); color:var(--danger); border:1px solid rgba(255,107,107,0.06); }
 
-/* Feed card specifics */
-.feed-card { padding:14px; }
-.placeholder { color:var(--muted); padding:30px; border-radius:8px; background:rgba(255,255,255,0.015); text-align:center; }
+/* placeholder */
+.placeholder{ color:var(--muted); padding:36px; text-align:center; border-radius:8px; background: rgba(255,255,255,0.015); }
 
-/* Footer */
-.app-footer { margin-top:18px; text-align:center; color:var(--muted); font-size:13px; }
+/* panel toggle button (hamburger) */
+.panel-toggle-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:44px; height:44px; border-radius:8px;
+  background: rgba(255,255,255,0.03); color:var(--text);
+  border:1px solid rgba(255,255,255,0.04); cursor:pointer;
+}
+@media (min-width:901px) { .panel-toggle-btn{ display:none; } }
 
+/* footer */
+.app-footer{ margin-top:18px; text-align:center; color:var(--muted); font-size:13px; }
 
+/* responsive: panel becomes top drawer */
+@media (max-width:900px) {
+  .config-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-height: 70vh;
+    transform: translateY(-120%); /* hidden by default on mobile */
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.45);
+  }
+  .config-panel.open { transform: translateY(0); }
 
+  .main-content{ margin-left: 0; padding: 14px; }
+  .mobile-panel-overlay{ display:block; }
+}
+
+/* account select dark style */
 .account-select {
-  background-color: #1e1e2f;  /* dark background */
-  color: #f0f0f0;             /* light text */
+  background-color: #1e1e2f;
+  color: #f0f0f0;
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #444;
-  font-size: 14px;
-  outline: none;
   transition: all 0.2s ease-in-out;
   cursor: pointer;
 }
-
-.account-select:hover {
-  background-color: #2a2a40;
-  border-color: #666;
-}
-
-.account-select:focus {
-  border-color: #4a90e2;
-  box-shadow: 0 0 6px rgba(74, 144, 226, 0.6);
-}
-
-.account-select option {
-  background-color: #1e1e2f;
-  color: #f0f0f0;
-}
+.account-select option { background-color: #1e1e2f; color: #f0f0f0; }
