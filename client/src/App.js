@@ -30,20 +30,6 @@ function App() {
       .catch(err => console.error(err));
   }, [API_BASE_URL]);
 
-  // Close mobile panel on Escape
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') setPanelOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
-  // Close mobile panel if viewport becomes wide
-  useEffect(() => {
-    const onResize = () => { if (window.innerWidth > 900 && panelOpen) setPanelOpen(false); };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [panelOpen]);
-
   const handleAddAccount = async () => {
     setError('');
     setMessage('');
@@ -88,7 +74,7 @@ function App() {
 
           <div className="display-options">
             {DISPLAY_OPTIONS.map(opt => (
-              <label key={opt.key} className={`display-option ${displayStyle===opt.key ? 'active' : ''}`}>
+              <label key={opt.key} className={`display-option ${displayStyle === opt.key ? 'active' : ''}`}>
                 <input
                   type="radio"
                   name="displayStyle"
@@ -106,7 +92,7 @@ function App() {
           <hr />
 
           <h4 className="small muted">Preview Controls</h4>
-          <div style={{marginTop:8}}>
+          <div style={{ marginTop: 8 }}>
             <button className="btn small secondary" onClick={() => setDisplayStyle('grid-4')}>Reset</button>
           </div>
         </div>
@@ -123,59 +109,55 @@ function App() {
             <h2 className="card-title">Add Instagram Account</h2>
             <p className="muted">Enter the Facebook Page ID that is linked to the Instagram Business account.</p>
 
-          <div className="form-row">
-            <input
-              className="input"
-              type="text"
-              placeholder="Facebook Page ID (e.g. 756469077550854)"
-              value={newPageId}
-              onChange={e => setNewPageId(e.target.value)}
-              aria-label="Facebook Page ID"
-            />
-            <button className="btn primary" onClick={handleAddAccount}>Add Account</button>
-          </div>
+            <div className="form-row">
+              <input
+                className="input"
+                type="text"
+                placeholder="Facebook Page ID (e.g. 756469077550854)"
+                value={newPageId}
+                onChange={e => setNewPageId(e.target.value)}
+                aria-label="Facebook Page ID"
+              />
+              <button className="btn primary" onClick={handleAddAccount}>Add Account</button>
+            </div>
 
-          <div className="messages">
-            {message && <div className="msg success">{message}</div>}
-            {error && <div className="msg error">{error}</div>}
-          </div>
-        </section>
+            <div className="messages">
+              {message && <div className="msg success">{message}</div>}
+              {error && <div className="msg error">{error}</div>}
+            </div>
+          </section>
 
-        <section className="card select-card">
-          <h2 className="card-title">Select Account to View</h2>
+          <section className="card select-card">
+            <h2 className="card-title">Select Account to View</h2>
 
-          <div className="form-row">
-            <select
-              className="account-select"
-              value={selectedAccount}
-              onChange={e => setSelectedAccount(e.target.value)}
-              aria-label="Select Instagram account"
-            >
-              <option value="">— Select an account —</option>
-              {accounts.map(acc => (
-                <option key={acc.instagramId} value={acc.instagramId}>
-                  {acc.name}
-                </option>
-              ))}
-            </select>
-            <button
-              className="btn secondary"
-              onClick={() => {
-                setSelectedAccount('');
-                setMessage('');
-                setError('');
-              }}
-              title="Clear selection"
-            >
-              Clear
-            </button>
-          </div>
+            <div className="form-row">
+              <select
+                className="account-select"
+                value={selectedAccount}
+                onChange={e => setSelectedAccount(e.target.value)}
+                aria-label="Select Instagram account"
+              >
+                <option value="">— Select an account —</option>
+                {accounts.map(acc => (
+                  <option key={acc.instagramId} value={acc.instagramId}>
+                    {acc.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="btn secondary"
+                onClick={handleClearSelection}
+                title="Clear selection"
+              >
+                Clear
+              </button>
+            </div>
 
-          <p className="muted small">Tip: Add a Page ID above to connect a new Instagram Business account.</p>
-        </section>
+            <p className="muted small">Tip: Add a Page ID above to connect a new Instagram Business account.</p>
+          </section>
 
           <section className="card feed-card">
-            <h2 className="card-title">Preview — {DISPLAY_OPTIONS.find(o=>o.key===displayStyle)?.label}</h2>
+            <h2 className="card-title">Preview — {DISPLAY_OPTIONS.find(o => o.key === displayStyle)?.label}</h2>
             {!selectedAccount ? (
               <div className="placeholder">No account selected. Choose an account to view the feed.</div>
             ) : (
@@ -184,9 +166,10 @@ function App() {
           </section>
         </main>
 
-      <footer className="app-footer">
-        <small>Built with the Instagram Graph API • Keep tokens secure on the server</small>
-      </footer>
+        <footer className="app-footer">
+          <small>Built with the Instagram Graph API • Keep tokens secure on the server</small>
+        </footer>
+      </div>
     </div>
   );
 }
