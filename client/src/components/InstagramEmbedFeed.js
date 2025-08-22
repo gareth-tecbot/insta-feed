@@ -46,10 +46,23 @@ const EmbedFeed = ({ accountKey }) => {
   // initial load when accountKey changes
   useEffect(() => {
     if (!accountKey) return;
-    setPosts([]);
-    setNextCursor(null);
-    fetchPage({ after: null, append: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setLoading(true);
+    setError(null);
+
+    fetch(`${API_BASE_URL}/api/instagram-posts/${accountKey}`)
+      .then(async (res) => {
+        const json = await res.json();
+        if (!res.ok || json.error) throw new Error(json.error || 'Failed to fetch posts');
+        return json;
+      })
+      .then((data) => {
+        setPosts(data.data || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message || 'Failed to fetch posts');
+        setLoading(false);
+      });
   }, [accountKey]);
 
   const handleLoadMore = () => {
@@ -62,46 +75,54 @@ const EmbedFeed = ({ accountKey }) => {
   if (!posts.length) return <p>No posts found for this account.</p>;
 
   return (
-    <div>
-      <div className="instagram-feed-grid layout-grid-4">
-        {posts.map(post => (
-          <a
-            key={post.id}
-            href={post.permalink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="post-card"
-            aria-label={post.caption ? post.caption : 'Instagram post'}
-          >
-            <div className="media">
-              {post.media_type === 'VIDEO' ? (
-                <video src={post.media_url} preload="metadata" muted playsInline />
-              ) : (
-                <img src={post.media_url} alt={post.caption || 'Instagram post'} loading="lazy" />
-              )}
+    <div className={`instagram-feed-grid ${layoutClass}`}>
+      {posts.map((post) => (
+        <article key={post.id} className={`post-card ${displayStyle}`}>
+          {displayStyle === 'text-left' ? (
+            <div className="text-left-row">
+              <div className="media">
+                {post.media_type === 'VIDEO' ? (
+                  <video src={post.media_url} preload="metadata" muted playsInline />
+                ) : (
+                  <img src={post.media_url} alt={post.caption || 'Instagram post'} loading="lazy" />
+                )}
+              </div>
+              <div className="text-block">
+                <h4 className="post-title">{post.caption ? post.caption.split('\n')[0] : 'Post'}</h4>
+                <p className="post-snippet">{post.caption}</p>
+                <a className="post-link" href={post.permalink} target="_blank" rel="noopener noreferrer">View on IG</a>
+              </div>
             </div>
-
-            <div className="overlay">
-              {post.caption && <div className="caption">{post.caption}</div>}
-            </div>
-          </a>
-        ))}
-      </div>
-
-      <div style={{ textAlign: 'center', marginTop: 18 }}>
-        {nextCursor ? (
-          <button
-            className="btn primary"
-            onClick={handleLoadMore}
-            disabled={loadingMore}
-            style={{ padding: '10px 18px', borderRadius: 8 }}
-          >
-            {loadingMore ? 'Loading…' : 'Load more'}
-          </button>
-        ) : (
-          <div style={{ color: '#9aa4b2' }}>No more posts</div>
-        )}
-      </div>
+          ) : displayStyle === 'text-below' ? (
+            <>
+              <a href={post.permalink} target="_blank" rel="noopener noreferrer" className="media">
+                {post.media_type === 'VIDEO' ? (
+                  <video src={post.media_url} preload="metadata" muted playsInline />
+                ) : (
+                  <img src={post.media_url} alt={post.caption || 'Instagram post'} loading="lazy" />
+                )}
+              </a>
+              <div className="caption-below">
+                <p>{post.caption}</p>
+              </div>
+            </>
+          ) : (
+            // default overlay styles (grid variants + masonry)
+            <a href={post.permalink} target="_blank" rel="noopener noreferrer" className="media-link">
+              <div className="media">
+                {post.media_type === 'VIDEO' ? (
+                  <video src={post.media_url} preload="metadata" muted playsInline />
+                ) : (
+                  <img src={post.media_url} alt={post.caption || 'Instagram post'} loading="lazy" />
+                )}
+              </div>
+              <div className="overlay">
+                {post.caption && <div className="caption">{post.caption}</div>}
+              </div>
+            </a>
+          )}
+        </article>
+      ))}
     </div>
   );
 };

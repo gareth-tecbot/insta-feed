@@ -59,37 +59,131 @@
   transition: opacity .26s ease, transform .26s ease;
   max-height: 80%;
   overflow: auto;
+  opacity: 0;
+  transform: translateY(20px); /* slight slide up effect */
+  transition: opacity 260ms ease, transform 260ms ease;
 }
-.post-card:hover .overlay { opacity: 1; }
-.post-card:hover .caption { opacity: 1; transform: translateY(0); }
 
-/* caption below style */
-.caption-below { padding:10px 12px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02)); color:#e6eef6; }
+/* On hover: show overlay + fade in caption */
+.post-card:hover .overlay {
+  opacity: 1;
+}
+.post-card:hover .caption {
+  opacity: 1;
+  transform: translateY(0);
+}
 
-/* text-left layout */
+/* Optional: scrollbar styling for long captions */
+.post-card .caption::-webkit-scrollbar {
+  width: 8px;
+}
+.post-card .caption::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.25);
+  border-radius: 6px;
+}
+
+/* src/components/EmbedFeed.css */
+
+/* base grid */
+.instagram-feed-grid { display: grid; gap: 14px; }
+
+/* Grid variants */
+.layout-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.layout-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.layout-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* masonry: simple column layout that looks masonry-like */
+.layout-masonry {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width:1100px) { .layout-masonry { grid-template-columns: repeat(2,1fr); } }
+@media (max-width:700px) { .layout-masonry { grid-template-columns: 1fr; } }
+
+/* Responsive fallbacks */
+@media (max-width:1200px) { .layout-grid-4 { grid-template-columns: repeat(3,1fr); } }
+@media (max-width:900px) { .layout-grid-4, .layout-grid-3 { grid-template-columns: repeat(2,1fr); } }
+@media (max-width:600px) { .layout-grid-2, .layout-grid-3, .layout-grid-4 { grid-template-columns: 1fr; } }
+
+/* shared post card */
+.post-card { position: relative; overflow: hidden; border-radius: 12px; background:#0b1116; color:#fff; box-shadow:0 6px 18px rgba(0,0,0,0.18); }
+
+/* overlay/grid cards - uniform square */
+.post-card .media, .post-card img, .post-card video { width:100%; height:100%; object-fit:cover; display:block; }
+.post-card a.media-link { display:block; position:relative; aspect-ratio: 1/1; }
+.post-card .media { width:100%; height:100%; }
+.post-card video { background:#000; }
+
+/* overlay behavior */
+.post-card .overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); opacity:0; transition:opacity .22s ease; text-align:center; padding:12px; }
+.post-card .caption { color:#fff; font-size:14px; line-height:1.4; max-height:70%; overflow:auto; }
+.post-card:hover .overlay { opacity:1; }
+.post-card:hover img, .post-card:hover video { transform:scale(1.03); transition: transform .28s ease; }
+
+/* caption below style (text-below) */
+.post-card .caption-below { padding:10px 12px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02)); color:#e6eef6; max-height:200px; overflow:hidden; }
+.post-card .caption-below p { margin:0; font-size:13px; color:#d7e6f0; }
+
+/* text-left style (card with image left, text right) */
 .text-left-row { display:flex; gap:12px; align-items:flex-start; padding:12px; }
-.text-left-row .media { width:46%; aspect-ratio:1/1; flex:0 0 46%; border-radius:8px; overflow:hidden; }
+.text-left-row .media { width:46%; aspect-ratio: 1/1; flex: 0 0 46%; border-radius:8px; overflow:hidden; }
+.text-left-row img, .text-left-row video { width:100%; height:100%; object-fit:cover; display:block; }
+.text-left-row .text-block { flex:1; display:flex; flex-direction:column; gap:8px; }
+.post-title { margin:0; font-size:15px; color:#fff; }
+.post-snippet { margin:0; color:#cbd7e0; font-size:13px; max-height:110px; overflow:hidden; }
+.post-link { display:inline-block; margin-top:auto; font-size:13px; color:#0ea5a3; text-decoration:none; }
 
-/* masonry tweaks */
-.layout-masonry .post-card a.media-link { aspect-ratio:auto; height:260px; }
+/* masonry tweak - slightly taller rows (we use aspect-ratio auto to allow varied heights) */
+.layout-masonry .post-card a.media-link { aspect-ratio: auto; height: 260px; }
+.layout-masonry .post-card img { height:100%; object-fit:cover; }
 
-/* featured/wide span classes */
-.post-card.featured { grid-column: span 2; }
-.post-card.extra-wide { grid-column: span 3; }
-
-/* collapse wide spans on mobile */
+/* small screens: tighten spacing */
 @media (max-width:700px) {
-  .post-card.featured, .post-card.extra-wide { grid-column: span 1; }
+  .text-left-row { flex-direction:column; }
+  .text-left-row .media { width:100%; aspect-ratio:1/1; }
 }
 
-/* Load more button wrapper */
-.embed-load-more { text-align:center; margin-top:18px; }
-.embed-load-more .btn { padding:10px 18px; border-radius:8px; }
-
-/* small scrollbar style */
-.post-card .caption::-webkit-scrollbar { width:8px; }
-.post-card .caption::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius:6px; }
-
-/* settings panel helper */
+/* Add small decorative active style for chosen display option in panel */
 .display-option { display:flex; align-items:center; gap:10px; padding:8px; border-radius:8px; cursor:pointer; margin-bottom:8px; background:transparent; border:1px solid rgba(255,255,255,0.02); }
 .display-option.active { background: linear-gradient(90deg, rgba(14,165,163,0.08), rgba(6,182,212,0.06)); border-color: rgba(14,165,163,0.18); }
+.display-option input { width:16px; height:16px; }
+
+
+.config-panel {
+  position: fixed;      /* Stays on screen even when scrolling */
+  top: 0;               /* Start at top of viewport */
+  left: 0;              /* Align to left edge */
+  height: 100vh;        /* Full viewport height */
+  width: 280px;         /* Adjust width as needed */
+  background-color: #1a1a1a;  /* Dark panel */
+  color: #fff;          /* Text color */
+  padding: 20px;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+  overflow-y: auto;     /* Scroll if content is taller than viewport */
+  z-index: 1000;        /* Make sure it sits above other elements */
+}
+
+.config-panel h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.config-panel button, .config-panel select {
+  display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background-color: #333;
+  color: #fff;
+  cursor: pointer;
+}
+
+.config-panel button:hover {
+  background-color: #444;
+}
+
+
+
